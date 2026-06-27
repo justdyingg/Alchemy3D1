@@ -720,7 +720,10 @@
     "backOffset": 0.5,
     "slotSpacing": 0.3,
     "blockHeight": 0.16,
-    "followSpeed": 20,
+    "maxBackward": 0.8,
+    "curvePower": 2,
+    "enableTilt": true,
+    "moveThreshold": 0.5,
     "_id": ""
   },
   {
