@@ -21,11 +21,13 @@ export class SlotStackLayout extends LayoutBase {
     unitsPerBlock: number = 1;
 
     private _blocks: Node[] = [];
-    private _totalPlaced: number = 0;
+    private _unitCount: number = 0;
+    private _totalPlaced: number = 0; // 用于计算下一个位置
 
     public reset() {
         this._blocks.forEach(b => b.destroy());
         this._blocks = [];
+        this._unitCount = 0;
         this._totalPlaced = 0;
     }
 
@@ -56,16 +58,20 @@ export class SlotStackLayout extends LayoutBase {
         return block;
     }
 
-    // 移除最底层方块
     public removeBlock(): Node | null {
         if (this._blocks.length === 0) return null;
         const node = this._blocks.shift()!;
-        this.rearrange();
+        this._unitCount = Math.max(0, this._unitCount - this.unitsPerBlock);
+        this.syncBlocks();
         return node;
     }
 
     public hasBlocks(): boolean {
         return this._blocks.length > 0;
+    }
+
+    public getBlockCount(): number {
+        return this._blocks.length;
     }
 
     public getBottomBlockWorldPos(): Vec3 | null {
@@ -74,6 +80,30 @@ export class SlotStackLayout extends LayoutBase {
 
     public getTopBlockWorldPos(): Vec3 | null {
         return this._blocks.length > 0 ? this._blocks[this._blocks.length - 1].getWorldPosition().clone() : null;
+    }
+
+    public addUnits(count: number): void {
+        this._unitCount += count;
+        this.syncBlocks();
+    }
+
+    public removeUnits(count: number): number {
+        const actual = Math.min(count, this._unitCount);
+        this._unitCount -= actual;
+        this.syncBlocks();
+        return actual;
+    }
+
+    private syncBlocks(): void {
+        const expected = Math.ceil(this._unitCount / this.unitsPerBlock);
+        while (this._blocks.length < expected) {
+            this.spawnBlock(); // spawnBlock 内部使用 _totalPlaced 递增，可能会改变位置，但预期方块数增加时我们应该正确生成
+        }
+        while (this._blocks.length > expected) {
+            const block = this._blocks.pop();
+            if (block) block.destroy();
+        }
+        this.rearrange();
     }
 
     private rearrange(): void {

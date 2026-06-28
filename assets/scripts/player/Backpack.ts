@@ -1,3 +1,4 @@
+// assets/scripts/player/Backpack.ts
 import { _decorator, Component } from 'cc';
 const { ccclass, property } = _decorator;
 
@@ -11,6 +12,9 @@ interface SlotData {
 export class Backpack extends Component {
     @property({ tooltip: '每个槽位最多显示的方块数量' })
     maxVisibleBlocks: number = 50;
+
+    @property({ tooltip: '金币的显示压缩比例（1个方块代表的金币数量）' })
+    coinUnitsPerBlock: number = 4;
 
     private _slots: SlotData[] = [];
 
@@ -57,9 +61,13 @@ export class Backpack extends Component {
         return slot ? slot.count : 0;
     }
 
-    /** 获取应显示的数量（受 maxVisibleBlocks 限制） */
+    /** 获取应显示的数量（受 maxVisibleBlocks 限制，且对金币支持压缩） */
     public getVisibleCount(type: string): number {
-        return Math.min(this.getCount(type), this.maxVisibleBlocks);
+        const count = this.getCount(type);
+        if (type === 'coin' && this.coinUnitsPerBlock > 0) {
+            return Math.min(Math.ceil(count / this.coinUnitsPerBlock), this.maxVisibleBlocks);
+        }
+        return Math.min(count, this.maxVisibleBlocks);
     }
 
     /** 获取所有已注册的类型（按注册顺序） */

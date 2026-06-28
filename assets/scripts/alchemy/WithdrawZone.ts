@@ -1,5 +1,5 @@
 // assets/scripts/alchemy/WithdrawZone.ts
-import { _decorator, Vec3, tween, Node as CcNode } from 'cc';
+import { _decorator, Vec3, tween, instantiate, Node as CcNode } from 'cc';
 import { BaseZone } from './BaseZone';
 import { LayoutBase } from '../resource/LayoutBase';
 const { ccclass, property } = _decorator;
@@ -7,7 +7,7 @@ const { ccclass, property } = _decorator;
 @ccclass('WithdrawZone')
 export class WithdrawZone extends BaseZone {
     @property({ tooltip: '要取出的资源类型' })
-    resourceType: string = 'gold';
+    resourceType: string = 'coin';   // 默认金币
 
     @property({ tooltip: '每次取出间隔（秒）' })
     interval: number = 0.1;
@@ -30,9 +30,7 @@ export class WithdrawZone extends BaseZone {
     protected onLeave() { }
 
     update(dt: number) {
-        if (!this._isPlayerInside) return;
-
-        if (!this._playerBackpack) return;
+        if (!this._isPlayerInside || !this._playerBackpack) return;
 
         this._timer += dt;
         if (this._timer >= this.interval) {
@@ -51,15 +49,21 @@ export class WithdrawZone extends BaseZone {
         const startPos = this.layout.getTopBlockWorldPos();
         if (!startPos) return;
 
-        // 再从布局中移除该顶层方块（确保位置一致）
-        const blockNode = this.layout.removeBlock();
-        if (!blockNode) return;
+        // 移除 1 个逻辑单位（可能不会减少视觉方块）
+        const removed = this.layout.removeUnits(1);
+        if (removed <= 0) return;
 
-        this.flyToPlayer(blockNode, startPos, () => {
+        // 创建临时方块飞行，从顶层位置飞向玩家
+        if (!this.layout.blockPrefab) return;
+        const tempBlock = instantiate(this.layout.blockPrefab);
+        tempBlock.setParent(this.node);
+        tempBlock.setWorldPosition(startPos);
+
+        this.flyToPlayer(tempBlock, startPos, () => {
+            tempBlock.destroy();
             if (this._playerBackpack) {
                 this._playerBackpack.addItem(this.resourceType);
             }
-            blockNode.destroy();
         });
     }
 
@@ -70,7 +74,6 @@ export class WithdrawZone extends BaseZone {
         }
 
         const playerPos = this._playerBackpackView.node.getWorldPosition();
-        // 飞行目标暂定为玩家头顶附近，实际添加物品后背包视图会正确显示方块
         const targetPos = new Vec3(playerPos.x, playerPos.y + 1.0, playerPos.z);
 
         const midPoint = new Vec3();

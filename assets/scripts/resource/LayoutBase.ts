@@ -11,7 +11,6 @@ export abstract class LayoutBase extends Component {
     layoutRoot: Node | null = null;
 
     public abstract getNextPosition(): Vec3;
-
     public spawnBlock(): Node | null {
         if (!this.blockPrefab || !this.layoutRoot) return null;
         const block = instantiate(this.blockPrefab);
@@ -19,12 +18,14 @@ export abstract class LayoutBase extends Component {
         block.setWorldPosition(this.getNextPosition());
         return block;
     }
-
     public abstract removeBlock(): Node | null;
     public abstract hasBlocks(): boolean;
-
-    // 新增：获取最底层方块的世界位置（不移除）
+    public abstract getBlockCount(): number;
     public abstract getBottomBlockWorldPos(): Vec3 | null;
-    // 新增：获取最顶层方块的世界位置（不移除）
     public abstract getTopBlockWorldPos(): Vec3 | null;
+
+    /** 添加逻辑单位（会根据 unitsPerBlock 自动管理视觉方块） */
+    public abstract addUnits(count: number): void;
+    /** 移除逻辑单位，返回实际移除的逻辑单位数 */
+    public abstract removeUnits(count: number): number;
 }

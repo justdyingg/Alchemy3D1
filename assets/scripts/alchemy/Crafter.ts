@@ -3,11 +3,7 @@ import { _decorator, Component, Node, Vec3, tween, instantiate } from 'cc';
 import { LayoutBase } from '../resource/LayoutBase';
 const { ccclass, property } = _decorator;
 
-enum State {
-    Idle,
-    Absorbing,
-    Crafting
-}
+enum State { Idle, Absorbing, Crafting, Producing }
 
 @ccclass('Crafter')
 export class Crafter extends Component {
@@ -33,27 +29,23 @@ export class Crafter extends Component {
     flyArcHeight: number = 1.5;
 
     @property({ tooltip: '产出飞行时长（秒）' })
-    productFlyDuration: number = 0.3;    // 稍微加长，容易观察
+    productFlyDuration: number = 0.3;
 
     @property({ tooltip: '产出飞行弧线高度' })
-    productFlyArcHeight: number = 2.0;   // 弧线更高，轨迹明显
+    productFlyArcHeight: number = 2.0;
 
     @property({ tooltip: '产出飞行终点偏移（相对于B区域布局根节点）' })
-    productEndOffset: Vec3 = new Vec3(0, 1.5, 0); // 飞向 B 区域上方 1.5 处
+    productEndOffset: Vec3 = new Vec3(0, 1.5, 0);
 
     private _state: State = State.Idle;
     private _currentTimer: number = 0;
     private _flyingBlock: Node | null = null;
 
-    start() {
-        this.showModel(false);
-    }
+    start() { this.showModel(false); }
 
     update(dt: number) {
         switch (this._state) {
-            case State.Idle:
-                this.tryStartAbsorb();
-                break;
+            case State.Idle: this.tryStartAbsorb(); break;
             case State.Crafting:
                 this._currentTimer += dt;
                 if (this._currentTimer >= this.craftDuration) {
@@ -66,10 +58,8 @@ export class Crafter extends Component {
 
     private tryStartAbsorb(): void {
         if (!this.inputLayout || !this.outputLayout) return;
-
         const startPos = this.inputLayout.getBottomBlockWorldPos();
         if (!startPos) return;
-
         const blockNode = this.inputLayout.removeBlock();
         if (!blockNode) return;
 
@@ -90,24 +80,20 @@ export class Crafter extends Component {
 
     private onCraftFinished(): void {
         if (!this.outputLayout) return;
+        this._state = State.Producing;
 
-        // 计算飞行起点：炼金台工作模型位置（或节点位置）
         const startPos = this.getProductStartPos();
-        // 飞行终点：B 区域布局根节点位置 + 偏移（让方块从空中落下）
         const layoutRootPos = this.outputLayout.layoutRoot?.getWorldPosition() || Vec3.ZERO;
         const targetPos = layoutRootPos.clone().add(this.productEndOffset);
 
-
-        // 创建临时金矿方块用于飞行
         const tempBlock = instantiate(this.outputLayout.blockPrefab!);
         tempBlock.setWorldPosition(startPos);
-        // 临时挂到场景根下，避免被 B 区域布局影响
         tempBlock.setParent(this.node.parent);
 
         this.animateFly(tempBlock, startPos, targetPos, this.productFlyDuration, this.productFlyArcHeight, () => {
             tempBlock.destroy();
-            // 在布局中正式添加方块
-            this.outputLayout!.spawnBlock();
+            // 改为 addUnits
+            this.outputLayout!.addUnits(1);
 
             if (this.inputLayout && this.inputLayout.hasBlocks()) {
                 this.tryStartAbsorb();
@@ -128,9 +114,7 @@ export class Crafter extends Component {
     }
 
     private getProductStartPos(): Vec3 {
-        if (this.workingModel) {
-            return this.workingModel.getWorldPosition().clone();
-        }
+        if (this.workingModel) return this.workingModel.getWorldPosition().clone();
         return this.node.getWorldPosition().clone();
     }
 
@@ -151,9 +135,7 @@ export class Crafter extends Component {
                     pos.z = u * u * start.z + 2 * u * t * midPoint.z + t * t * end.z;
                     node.setWorldPosition(pos);
                 },
-                onComplete: () => {
-                    onComplete();
-                }
+                onComplete: () => { onComplete(); }
             })
             .start();
     }

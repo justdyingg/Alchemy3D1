@@ -27,6 +27,7 @@ export class GridStackLayout extends LayoutBase {
     unitsPerBlock: number = 1;
 
     private _blocks: Node[] = [];
+    private _unitCount: number = 0;
     private _cellsPerLayer: number = 1;
 
     start() {
@@ -36,6 +37,7 @@ export class GridStackLayout extends LayoutBase {
     public reset() {
         this._blocks.forEach(b => b.destroy());
         this._blocks = [];
+        this._unitCount = 0;
     }
 
     public getNextPosition(): Vec3 {
@@ -65,7 +67,8 @@ export class GridStackLayout extends LayoutBase {
         if (this.enableVisibleCap && this.maxVisibleLayers > 0) {
             const currentLayers = Math.ceil(this._blocks.length / this._cellsPerLayer);
             if (currentLayers > this.maxVisibleLayers) {
-                for (let i = 0; i < this._cellsPerLayer && this._blocks.length > 0; i++) {
+                const removeCount = this._cellsPerLayer;
+                for (let i = 0; i < removeCount && this._blocks.length > 0; i++) {
                     const old = this._blocks.shift();
                     if (old) old.destroy();
                 }
@@ -75,16 +78,20 @@ export class GridStackLayout extends LayoutBase {
         return block;
     }
 
-    // 移除最底层方块
     public removeBlock(): Node | null {
         if (this._blocks.length === 0) return null;
         const node = this._blocks.shift()!;
-        this.rearrange();
+        this._unitCount = Math.max(0, this._unitCount - this.unitsPerBlock);
+        this.syncBlocks();
         return node;
     }
 
     public hasBlocks(): boolean {
         return this._blocks.length > 0;
+    }
+
+    public getBlockCount(): number {
+        return this._blocks.length;
     }
 
     public getBottomBlockWorldPos(): Vec3 | null {
@@ -93,6 +100,36 @@ export class GridStackLayout extends LayoutBase {
 
     public getTopBlockWorldPos(): Vec3 | null {
         return this._blocks.length > 0 ? this._blocks[this._blocks.length - 1].getWorldPosition().clone() : null;
+    }
+
+    public addUnits(count: number): void {
+        this._unitCount += count;
+        this.syncBlocks();
+    }
+
+    public removeUnits(count: number): number {
+        const actual = Math.min(count, this._unitCount);
+        this._unitCount -= actual;
+        this.syncBlocks();
+        return actual;
+    }
+
+    private syncBlocks(): void {
+        const expected = Math.ceil(this._unitCount / this.unitsPerBlock);
+        while (this._blocks.length < expected) {
+            this.spawnBlock();
+        }
+        while (this._blocks.length > expected) {
+            const block = this._blocks.pop();
+            if (block) block.destroy();
+        }
+        if (this._blocks.length > expected) {
+            while (this._blocks.length > expected) {
+                const block = this._blocks.pop();
+                if (block) block.destroy();
+            }
+        }
+        this.rearrange();
     }
 
     private rearrange(): void {

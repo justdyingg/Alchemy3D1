@@ -1,7 +1,10 @@
+// assets/scripts/player/Attack.ts
 import { _decorator, Component, Node, Vec3, tween } from 'cc';
 import { TargetLock } from './TargetLock';
 import { Stone } from '../stone/Stone';
 import { Backpack } from './Backpack';
+import { LayoutBase } from '../resource/LayoutBase'; // 新增导入
+
 const { ccclass, property } = _decorator;
 
 @ccclass('Attack')
@@ -27,8 +30,9 @@ export class Attack extends Component {
     @property({ tooltip: '刺出距离' })
     forwardOffset: number = 0.8;
 
-    @property({ tooltip: '默认产出资源类型（当石头未配置时使用）' })
-    defaultResourceType: string = 'stone';
+    // 新增：外部产出布局（帮手使用）
+    @property({ type: LayoutBase, tooltip: '资源产出目标布局（留空则产出到玩家背包）' })
+    outputLayout: LayoutBase | null = null;
 
     private _targetLock: TargetLock | null = null;
     private _backpack: Backpack | null = null;
@@ -38,11 +42,14 @@ export class Attack extends Component {
     start() {
         this._targetLock = this.getComponent(TargetLock);
         this._backpack = this.getComponent(Backpack);
-        if (this.stickNode) this._originalStickPos.set(this.stickNode.position);
+        if (this.stickNode) {
+            this._originalStickPos.set(this.stickNode.position);
+        }
     }
 
     update(dt: number) {
         if (!this._targetLock || !this._targetLock.isLocked) return;
+
         this._timer += dt;
         if (this._timer >= this.attackInterval) {
             this._timer = 0;
@@ -74,14 +81,17 @@ export class Attack extends Component {
 
         if (dist <= this.attackRange) {
             const caused = stone.takeDamage(this.attackDamage);
-            if (caused && this._backpack) {
-                // 优先使用石头配置的产出类型，若为空则回退到攻击者的默认值
-                const resourceType = stone.getResourceType() || this.defaultResourceType;
-                const success = this._backpack.addItem(resourceType);
-                if (success) {
-                    console.log(`获得 1 个 ${resourceType}`);
-                } else {
-                    console.log(`背包已满，无法获得 ${resourceType}`);
+            if (caused) {
+                const resourceType = stone.getResourceType() || 'stone';
+                // 优先使用外部布局，否则走玩家背包
+                if (this.outputLayout) {
+                    this.outputLayout.addUnits(1);
+                    console.log(`[Helper] 产出 ${resourceType} 到外部布局`);
+                } else if (this._backpack) {
+                    const success = this._backpack.addItem(resourceType);
+                    if (success) {
+                        console.log(`获得 1 个 ${resourceType}`);
+                    }
                 }
             }
         }
