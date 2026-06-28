@@ -50,10 +50,13 @@
       },
       {
         "__id__": 40
+      },
+      {
+        "__id__": 42
       }
     ],
     "_prefab": {
-      "__id__": 44
+      "__id__": 46
     },
     "_lpos": {
       "__type__": "cc.Vec3",
@@ -625,6 +628,7 @@
     "attackInterval": 0.5,
     "stickAnimDuration": 0.4,
     "forwardOffset": 0.8,
+    "defaultResourceType": "stone",
     "_id": ""
   },
   {
@@ -713,18 +717,10 @@
     "__prefab": {
       "__id__": 41
     },
-    "blockPrefabEntries": [
-      {
-        "__id__": 42
-      },
-      {
-        "__id__": 43
-      }
-    ],
     "backOffset": 0.5,
-    "slotSpacing": 0.3,
+    "slotSpacing": 0.4,
     "blockHeight": 0.16,
-    "maxBackward": 0.8,
+    "maxBackward": 2,
     "curvePower": 2,
     "enableTilt": true,
     "moveThreshold": 0.5,
@@ -735,17 +731,45 @@
     "fileId": "6dbnlvli1N46XI1oXJQ7nh"
   },
   {
-    "__type__": "BlockPrefabEntry",
+    "__type__": "a465dueEUxJEr1Y8glullAY",
+    "_name": "",
+    "_objFlags": 0,
+    "__editorExtras__": {},
+    "node": {
+      "__id__": 1
+    },
+    "_enabled": true,
+    "__prefab": {
+      "__id__": 43
+    },
+    "entries": [
+      {
+        "__id__": 44
+      },
+      {
+        "__id__": 45
+      }
+    ],
+    "_id": ""
+  },
+  {
+    "__type__": "cc.CompPrefabInfo",
+    "fileId": "96tJpOf/tEyq++kDcyI88+"
+  },
+  {
+    "__type__": "ResourceEntry",
     "typeName": "stone",
-    "prefab": {
+    "capacity": 300,
+    "blockPrefab": {
       "__uuid__": "dac15ccf-7a49-4da3-ba5a-37e11787ef77",
       "__expectedType__": "cc.Prefab"
     }
   },
   {
-    "__type__": "BlockPrefabEntry",
+    "__type__": "ResourceEntry",
     "typeName": "gold",
-    "prefab": {
+    "capacity": 300,
+    "blockPrefab": {
       "__uuid__": "0b9aab8f-78b4-4ff0-a7d5-3cb89e92f883",
       "__expectedType__": "cc.Prefab"
     }

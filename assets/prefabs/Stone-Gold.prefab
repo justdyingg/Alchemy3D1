@@ -1,7 +1,7 @@
 [
   {
     "__type__": "cc.Prefab",
-    "_name": "Stone",
+    "_name": "Stone-Gold",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_native": "",
@@ -13,7 +13,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "Stone",
+    "_name": "Stone-Gold",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": null,
@@ -79,7 +79,7 @@
     },
     "_materials": [
       {
-        "__uuid__": "2af3355e-068f-4d6f-9a0d-edc7fbb83740",
+        "__uuid__": "f9fb063a-5dbb-4826-a005-169d88d219cc",
         "__expectedType__": "cc.Material"
       }
     ],
@@ -208,7 +208,7 @@
       "__id__": 10
     },
     "maxHp": 100,
-    "resourceType": "stone",
+    "resourceType": "gold",
     "_id": ""
   },
   {

@@ -7,6 +7,9 @@ export class Stone extends Component {
     @property({ tooltip: '最大血量' })
     maxHp: number = 100;
 
+    @property({ tooltip: '血量归零时产出的资源类型（对应 ResourceConfig 中的 typeName）。若为空，则使用攻击者的默认产出。' })
+    resourceType: string = 'stone';
+
     private _currentHp: number = 100;
 
     start() {
@@ -19,6 +22,9 @@ export class Stone extends Component {
         }
     }
 
+    /**
+     * 受到伤害，返回是否触发资源产出（血量归零并重置）
+     */
     public takeDamage(damage: number): boolean {
         this._currentHp -= damage;
         if (this._currentHp <= 0) {
@@ -29,7 +35,17 @@ export class Stone extends Component {
         return false;
     }
 
+    /**
+     * 获取当前血量百分比 (0~1)
+     */
     public getHpPercent(): number {
         return this._currentHp / this.maxHp;
+    }
+
+    /**
+     * 获取本石头配置的产出资源类型，若为空则返回默认值
+     */
+    public getResourceType(): string {
+        return this.resourceType || 'stone';
     }
 }

@@ -80,6 +80,8 @@ export class BackpackView extends Component {
         this.applyPoses(isMoving);
     }
 
+
+
     private syncBlockCounts(): void {
         const types = this._backpack!.getTypes();
         for (let i = 0; i < types.length; i++) {
@@ -156,7 +158,7 @@ export class BackpackView extends Component {
     }
 
     private applyPoses(isMoving: boolean): void {
-        if (!this._backpack || !this._resourceConfig) return;
+        if (!this._backpack) return;
 
         const playerPos = this.node.getWorldPosition();
         const playerWorldRot = this.node.getWorldRotation();
@@ -166,11 +168,24 @@ export class BackpackView extends Component {
         Quat.fromEuler(playerYRot, 0, playerEuler.y, 0);
 
         const types = this._backpack.getTypes();
-        for (let slotIdx = 0; slotIdx < types.length; slotIdx++) {
-            const blocks = this._blockNodes.get(slotIdx);
+
+        // 先收集所有有效槽位的索引（数量 > 0 的槽位）
+        const activeSlots: { typeName: string; slotIndex: number }[] = [];
+        for (let i = 0; i < types.length; i++) {
+            const count = this._backpack.getCount(types[i]);
+            if (count > 0) {
+                activeSlots.push({ typeName: types[i], slotIndex: i });
+            }
+        }
+
+        // 按有效槽位的顺序重新排列位置
+        for (let activeIdx = 0; activeIdx < activeSlots.length; activeIdx++) {
+            const { slotIndex } = activeSlots[activeIdx];
+            const blocks = this._blockNodes.get(slotIndex);
             if (!blocks || blocks.length === 0) continue;
 
-            const slotLocalOffset = new Vec3(0, 0, -(this.backOffset + slotIdx * this.slotSpacing));
+            // 用 activeIdx 而不是 slotIndex 来计算位置
+            const slotLocalOffset = new Vec3(0, 0, -(this.backOffset + activeIdx * this.slotSpacing));
             const slotWorldOffset = new Vec3();
             Vec3.transformQuat(slotWorldOffset, slotLocalOffset, playerYRot);
             const slotBasePos = playerPos.clone().add(slotWorldOffset);
@@ -189,5 +204,39 @@ export class BackpackView extends Component {
                 block.setWorldRotation(finalRot);
             }
         }
+
+        // 清理已注册但数量为 0 的槽位（确保没有残留方块）
+        for (let i = 0; i < types.length; i++) {
+            const count = this._backpack.getCount(types[i]);
+            if (count === 0) {
+                const blocks = this._blockNodes.get(i);
+                if (blocks && blocks.length > 0) {
+                    // 销毁所有残留节点
+                    while (blocks.length > 0) {
+                        const node = blocks.pop();
+                        if (node) node.destroy();
+                    }
+                }
+            }
+        }
+    }
+    /**
+* 获取某类型最底层方块的世界位置（供外部飞行动画使用）
+* @param typeName 资源类型
+* @returns 世界位置，若无则返回 null
+*/
+    public getBottomBlockWorldPos(typeName: string): Vec3 | null {
+        if (!this._backpack) return null;
+
+        const types = this._backpack.getTypes();
+        for (let i = 0; i < types.length; i++) {
+            if (types[i] === typeName) {
+                const blocks = this._blockNodes.get(i);
+                if (blocks && blocks.length > 0) {
+                    return blocks[0].getWorldPosition().clone();
+                }
+            }
+        }
+        return null;
     }
 }

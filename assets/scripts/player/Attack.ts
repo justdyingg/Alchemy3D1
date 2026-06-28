@@ -8,18 +8,27 @@ const { ccclass, property } = _decorator;
 export class Attack extends Component {
     @property({ type: Node, tooltip: '木棍锚点' })
     stickAnchor: Node | null = null;
+
     @property({ type: Node, tooltip: '木棍模型' })
     stickNode: Node | null = null;
+
     @property({ tooltip: '攻击伤害' })
     attackDamage: number = 60;
+
     @property({ tooltip: '攻击判定范围' })
     attackRange: number = 50;
+
     @property({ tooltip: '攻击周期' })
     attackInterval: number = 0.5;
+
     @property({ tooltip: '动画时长' })
     stickAnimDuration: number = 0.4;
+
     @property({ tooltip: '刺出距离' })
     forwardOffset: number = 0.8;
+
+    @property({ tooltip: '默认产出资源类型（当石头未配置时使用）' })
+    defaultResourceType: string = 'stone';
 
     private _targetLock: TargetLock | null = null;
     private _backpack: Backpack | null = null;
@@ -66,11 +75,13 @@ export class Attack extends Component {
         if (dist <= this.attackRange) {
             const caused = stone.takeDamage(this.attackDamage);
             if (caused && this._backpack) {
-                const success = this._backpack.addItem('stone');
+                // 优先使用石头配置的产出类型，若为空则回退到攻击者的默认值
+                const resourceType = stone.getResourceType() || this.defaultResourceType;
+                const success = this._backpack.addItem(resourceType);
                 if (success) {
-                    console.log('获得 1 个原材料');
+                    console.log(`获得 1 个 ${resourceType}`);
                 } else {
-                    console.log('背包已满');
+                    console.log(`背包已满，无法获得 ${resourceType}`);
                 }
             }
         }
