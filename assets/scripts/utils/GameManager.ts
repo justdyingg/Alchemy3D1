@@ -2,7 +2,6 @@ import { _decorator, Component, Node, Prefab, instantiate, UITransform, Vec2, Ve
 import { PlayerMovement } from '../player/PlayerMovement';
 import { CameraFollow } from './CameraFollow';
 import { HpBarManager } from '../ui/HpBarManager';
-import { Backpack } from '../player/Backpack';
 const { ccclass, property } = _decorator;
 
 @ccclass('GameManager')
@@ -34,11 +33,6 @@ export class GameManager extends Component {
                 HpBarManager.instance.setPlayerNode(player);
             }
 
-            const backpack = player.getComponent(Backpack);
-            if (backpack) {
-                backpack.registerType('stone', 300);
-                console.log('GameManager: 已注册原材料类型 stone');
-            }
         } else if (this.playerNode) {
             this._playerMovement = this.playerNode.getComponent(PlayerMovement);
         }

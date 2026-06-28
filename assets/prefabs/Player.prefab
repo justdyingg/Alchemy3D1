@@ -53,7 +53,7 @@
       }
     ],
     "_prefab": {
-      "__id__": 42
+      "__id__": 44
     },
     "_lpos": {
       "__type__": "cc.Vec3",
@@ -713,10 +713,14 @@
     "__prefab": {
       "__id__": 41
     },
-    "blockPrefab": {
-      "__uuid__": "dac15ccf-7a49-4da3-ba5a-37e11787ef77",
-      "__expectedType__": "cc.Prefab"
-    },
+    "blockPrefabEntries": [
+      {
+        "__id__": 42
+      },
+      {
+        "__id__": 43
+      }
+    ],
     "backOffset": 0.5,
     "slotSpacing": 0.3,
     "blockHeight": 0.16,
@@ -729,6 +733,22 @@
   {
     "__type__": "cc.CompPrefabInfo",
     "fileId": "6dbnlvli1N46XI1oXJQ7nh"
+  },
+  {
+    "__type__": "BlockPrefabEntry",
+    "typeName": "stone",
+    "prefab": {
+      "__uuid__": "dac15ccf-7a49-4da3-ba5a-37e11787ef77",
+      "__expectedType__": "cc.Prefab"
+    }
+  },
+  {
+    "__type__": "BlockPrefabEntry",
+    "typeName": "gold",
+    "prefab": {
+      "__uuid__": "0b9aab8f-78b4-4ff0-a7d5-3cb89e92f883",
+      "__expectedType__": "cc.Prefab"
+    }
   },
   {
     "__type__": "cc.PrefabInfo",
