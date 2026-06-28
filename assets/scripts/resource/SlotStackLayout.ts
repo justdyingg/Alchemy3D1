@@ -5,16 +5,16 @@ const { ccclass, property } = _decorator;
 
 @ccclass('SlotStackLayout')
 export class SlotStackLayout extends LayoutBase {
-    @property({ type: [Node], tooltip: '按顺序排列的空节点（插槽标记），作为第一层模板' })
+    @property({ type: [Node], tooltip: '按顺序排列的空节点（插槽标记）' })
     slotNodes: Node[] = [];
 
-    @property({ tooltip: '每层高度（两层之间的垂直间距）' })
+    @property({ tooltip: '每层高度' })
     layerHeight: number = 0.3;
 
     @property({ tooltip: '启用显示上限' })
-    enableVisibleCap: boolean = true;
+    enableVisibleCap: boolean = false;
 
-    @property({ tooltip: '最大显示方块数量（仅 enableVisibleCap 为 true 时生效）' })
+    @property({ tooltip: '最大显示方块数量' })
     maxVisibleCount: number = 10;
 
     @property({ tooltip: '每个方块代表几个单位' })
@@ -43,36 +43,45 @@ export class SlotStackLayout extends LayoutBase {
     public spawnBlock(): Node | null {
         const block = super.spawnBlock();
         if (!block) return null;
-
         const pos = this.getNextPosition();
         block.setWorldPosition(pos);
-
         this._totalPlaced++;
         this._blocks.push(block);
 
-        // 显示上限处理
         if (this.enableVisibleCap && this.maxVisibleCount > 0 && this._blocks.length > this.maxVisibleCount) {
             const old = this._blocks.shift();
             if (old) old.destroy();
-            // 移除旧方块后，剩余方块需要整体下移，以保持正确的层高
             this.rearrange();
         }
-
         return block;
     }
 
-    /**
-     * 重新排列所有方块：根据当前 blocks 的顺序重新分配位置，
-     * 使显示层数始终保持一致。
-     */
+    // 移除最底层方块
+    public removeBlock(): Node | null {
+        if (this._blocks.length === 0) return null;
+        const node = this._blocks.shift()!;
+        this.rearrange();
+        return node;
+    }
+
+    public hasBlocks(): boolean {
+        return this._blocks.length > 0;
+    }
+
+    public getBottomBlockWorldPos(): Vec3 | null {
+        return this._blocks.length > 0 ? this._blocks[0].getWorldPosition().clone() : null;
+    }
+
+    public getTopBlockWorldPos(): Vec3 | null {
+        return this._blocks.length > 0 ? this._blocks[this._blocks.length - 1].getWorldPosition().clone() : null;
+    }
+
     private rearrange(): void {
         const slotsCount = this.slotNodes.length;
         if (slotsCount === 0) return;
-
         for (let i = 0; i < this._blocks.length; i++) {
-            const globalIndex = i; // 重新从0开始编号，位置就会从第一层开始
-            const slotIndex = globalIndex % slotsCount;
-            const layerIndex = Math.floor(globalIndex / slotsCount);
+            const slotIndex = i % slotsCount;
+            const layerIndex = Math.floor(i / slotsCount);
             const basePos = this.slotNodes[slotIndex].getWorldPosition().clone();
             basePos.y += layerIndex * this.layerHeight;
             this._blocks[i].setWorldPosition(basePos);

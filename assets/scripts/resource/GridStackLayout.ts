@@ -20,7 +20,7 @@ export class GridStackLayout extends LayoutBase {
     @property({ tooltip: '启用显示上限' })
     enableVisibleCap: boolean = false;
 
-    @property({ tooltip: '最大显示层数（仅 enableVisibleCap 为 true 时生效）' })
+    @property({ tooltip: '最大显示层数' })
     maxVisibleLayers: number = 5;
 
     @property({ tooltip: '每个方块代表几个单位' })
@@ -40,7 +40,6 @@ export class GridStackLayout extends LayoutBase {
 
     public getNextPosition(): Vec3 {
         if (this._cellsPerLayer <= 0) this._cellsPerLayer = 1;
-
         const index = this._blocks.length;
         const layer = Math.floor(index / this._cellsPerLayer);
         const indexInLayer = index % this._cellsPerLayer;
@@ -50,7 +49,6 @@ export class GridStackLayout extends LayoutBase {
         const base = this.layoutRoot!.getWorldPosition().clone();
         const offsetX = (col - (this.gridWidth - 1) * 0.5) * this.blockSpacing;
         const offsetZ = (row - (this.gridDepth - 1) * 0.5) * this.blockSpacing;
-
         return new Vec3(
             base.x + offsetX,
             base.y + layer * this.blockHeight + this.blockHeight * 0.5,
@@ -61,24 +59,40 @@ export class GridStackLayout extends LayoutBase {
     public spawnBlock(): Node | null {
         const block = super.spawnBlock();
         if (!block) return null;
-
         block.setWorldPosition(this.getNextPosition());
         this._blocks.push(block);
 
-        // 仅在启用显示上限时移除旧层
         if (this.enableVisibleCap && this.maxVisibleLayers > 0) {
             const currentLayers = Math.ceil(this._blocks.length / this._cellsPerLayer);
             if (currentLayers > this.maxVisibleLayers) {
-                const removeCount = this._cellsPerLayer;
-                for (let i = 0; i < removeCount && this._blocks.length > 0; i++) {
+                for (let i = 0; i < this._cellsPerLayer && this._blocks.length > 0; i++) {
                     const old = this._blocks.shift();
                     if (old) old.destroy();
                 }
                 this.rearrange();
             }
         }
-
         return block;
+    }
+
+    // 移除最底层方块
+    public removeBlock(): Node | null {
+        if (this._blocks.length === 0) return null;
+        const node = this._blocks.shift()!;
+        this.rearrange();
+        return node;
+    }
+
+    public hasBlocks(): boolean {
+        return this._blocks.length > 0;
+    }
+
+    public getBottomBlockWorldPos(): Vec3 | null {
+        return this._blocks.length > 0 ? this._blocks[0].getWorldPosition().clone() : null;
+    }
+
+    public getTopBlockWorldPos(): Vec3 | null {
+        return this._blocks.length > 0 ? this._blocks[this._blocks.length - 1].getWorldPosition().clone() : null;
     }
 
     private rearrange(): void {
@@ -91,16 +105,11 @@ export class GridStackLayout extends LayoutBase {
             const base = this.layoutRoot!.getWorldPosition().clone();
             const offsetX = (col - (this.gridWidth - 1) * 0.5) * this.blockSpacing;
             const offsetZ = (row - (this.gridDepth - 1) * 0.5) * this.blockSpacing;
-
             this._blocks[i].setWorldPosition(new Vec3(
                 base.x + offsetX,
                 base.y + layer * this.blockHeight + this.blockHeight * 0.5,
                 base.z + offsetZ
             ));
         }
-    }
-
-    public getLayerCount(): number {
-        return Math.ceil(this._blocks.length / this._cellsPerLayer);
     }
 }
